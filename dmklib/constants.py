@@ -17,3 +17,12 @@ class GameState(enum.Enum):
 @enum.unique
 class DefaultKey(enum.Enum):
     pass
+
+@enum.unique
+class MobjectType(enum.Enum):
+    player = 0
+    boss = 1
+    elf = 2
+    danmaku = 3
+    item = 4
+    
