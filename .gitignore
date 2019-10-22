@@ -105,3 +105,6 @@ venv.bak/
 
 # game cache
 __cache__
+
+test.py
+test/

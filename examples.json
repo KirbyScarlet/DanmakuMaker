@@ -1,0 +1,85 @@
+{
+    "comment": "danmaku example",
+    "?name": "danmaku name, dot or square, .etc",
+    "name": "danmaku_name",
+    "?size": "collide point size(pixel)",
+    "size": 3,
+    "?attack": "",
+    "attack": 30,
+    "extra":{
+        "area":[-20,-20,470,500],
+        "life":"inf",
+        "layer":0
+    },
+    "?animate": "specify an animation or not",
+    "animate": [],
+    "animate": [
+        {
+            "rotate": [
+                {
+                    "timer": 0,
+                    "value": "math.pi/60"
+                }
+            ]
+        },
+        {
+            "color": [
+                {
+                    "timer": 0,
+                    "value": "#ff0000"
+                },
+                {
+                    "timer": 10,
+                    "value": "#ffff00"
+                }
+            ]
+        },
+        {
+            "opacity": [
+                {
+                    "timer": 0,
+                    "value": "50%"
+                }
+            ]
+        }
+    ],
+    "?action": "danmaku motion trail (vector/accleration)",
+    "action": {
+        "init": {
+            "timer": 0,
+            "speed": 5,
+            "direction": {
+                "base": "pi*3/2",
+                "offset": "index*pi/60"
+            }
+        },
+        "actions": [
+            {
+                "timer": {
+                    "start": 0,
+                    "end": 60
+                },
+                "type": "linear_speed",
+                "value": {
+                    "start": {
+                        "speed": 5
+                    },
+                    "end": {
+                        "speed": 2
+                    }
+                }
+            },
+            {
+                "timer": {
+                    "start": 60,
+                    "end": "inf"
+                },
+                "type":"direction",
+                "value":{
+                    "direction":"now",
+                    "offset":"(-1)**index*pi/45"
+                }
+            }
+        ]
+    }
+}

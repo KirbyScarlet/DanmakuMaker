@@ -6,10 +6,15 @@ from pygame.image import load
 from pygame.image import tostring
 from pygame.image import frombuffer
 from pygame.sprite import Sprite
+from pygame.sprite import Group
 from pygame.math import Vector2
 from pygame.rect import Rect
 
 from collections import deque
+from collections import namedtuple
+from itertools import count
+
+from constants import MobjectType
 
 
 class HP(object):
@@ -45,10 +50,10 @@ class HP(object):
         self.__hp = self.__max_hp
 
     def __add__(self, other):
-        return HP(self.__hp+other)
+        return self.__hp.__add__(other)
 
     def __sub__(self, other):
-        return HP(self.__hp-other)
+        return self.__hp.__sub__(other)
 
     def __get__(self, instance, owner):
         return self.__hp
@@ -87,16 +92,93 @@ class Damage(object):
             mobject.hp = 0
             return
         mobject.hp -= self.__attack_damage
-        if mobject.hp < self.__ability_power:
+        if mobject.hp <= self.__ability_power:
             mobject.hp = 1
             return
         mobject.hp -= self.__ability_power
         self.special()
 
 
+Image = namedtuple("Image", "illustration animation extra")
+Animation = namedtuple("Animation", "stand turn_left turn_right")
+
+class Source(object):
+    """
+    """
+    pixel = []
+    illustration = []
+    image_fps_delay = 1
+    def __init__(self, mob, _json):
+        if mob._type == MobjectType.danmaku:
+            self.__type_danmaku(_json)
+        elif mob._type == MobjectType.boss:
+            self.__type_boss(_json)
+
+    def __type_danmaku(self, _json):
+        for im in _json:
+            self.pixel.append(load(im).convert_alpha())
+    
+    def __type_boss(self, _json):
+        for im in _json["pixel"]:
+            self.pixel.append(load(im).convert_alpha())
+        for im in _json["illustration"]:
+            self.illustration.append(load(im).convert_alpha())
+
+
+class MobjectGroup(Group):
+    """
+    class MobjectGroup(pygame.sprite.Group):
+
+    add property:
+
+    layer -> int:
+        group 0 will on the top layer.
+    """
+    layer = 0
+
+
 class Mobject(Sprite):
 
     """
+
+    class Mobject(pygame.sprite.Sprite):
+    
+    the class of all the moveble objects
+
+    property:
+        name -> str:
+            mobject name
+        id -> int:
+            mobject id
+        _type -> constants.MobjectType:
+            mobject type
+        timer -> int:
+            mobject life time
+        images -> collections.namedtuple:
+            pictures or illustractions
+        vector -> pygame.math.Vector2:
+            direction and speed
+        position -> pygame.math.Vector2:
+            position
+        colliable -> bool:
+            specify mobject can cause damage or not
+        rect -> pygame.rect.Rect:
+            collision box
+        radius -> int:
+            collision circle if exist
+
+        
+    method:
+        Sprite.add(pygame.sprite.Group): return None
+            append a mobject in a new group
+        Sprite.kill(): return None
+            kill a mobject itself
+        print(pygame.surface.Surface): return None
+            display on the screen or scope
+        action(self, *arg, **kwarg): return None
+            specify path of mobject movements
+        
+        
     """
 
     name = "Mobject"       # mobject name
@@ -104,44 +186,66 @@ class Mobject(Sprite):
 
     timer = 0              # timer
 
-    image = deque()        # pictures map (or frames)
-    rect = Rect(0,0,3,3)   # collision box
+    animation = {}
+    __rect = Rect(0,0,3,3) # collision box
     collidable = True      # collidable
     position = Vector2()   # mobject position
     vector = Vector2()     # movements speed and direction
 
+    '''
     __sources = {
         "name" : "Mobject",
-        "image_path" : None,
-        "image" : None,
+        "image_path" : {
+            "illustration" : None,
+            "pixel":None,
+            "animation" : {
+                "stand" : None,
+                "turn_left" : None,
+                "turn_right" : None,
+                },
+            "extra" : {},
+        },
+        "image_fps_delay" : 1,      # x frame(s) change image
     }
+    '''
+
+    __settings = {
+        "initial" : {
+            "initial_position" : (-50, -50),   # must be out of the scope
+            "initial_vector" : (0, 1),
+        },
+        "collide" : {
+            "collidable" : True,        # default in True
+            "collision_box_size" : 3,   # pixel
+        },
+        # "info":{
+        #     "invincible" : False,
+        #     "hp" : 0,
+        #     "max_hp" : 0, 
+        #     "attack" : 0,
+        #     "defence" : 0,
+        #     "crash_damage" : 0,
+        # },
+        "rotate" : {
+            "rotatable" : False,
+            "palstance" : 0,          # degree
+        },
+        "extra" : {
+            "bonus" : None,
+            "buff" : [],
+            "item" : [],
+        },
+    }
+
     @property
     @classmethod
     def source(cls):
         return cls.__sources
     @source.setter
     @classmethod
-    def source(cls, *args, **kwargs):
-        cls.__sources.update(kwargs)
-        cls.name = kwargs["name"]
-        cls.load(kwargs["name"], kwargs["image_path"])
+    def source(cls, _json):
+        cls.__sources = Source(cls, _json)
 
-    __settings = {
-        "collision_box_size" : 3,   # pixel
-        "collidable" : None,        # default in True
-        "crash_damage" : 0,
-        "image_fps_delay" : 1,      # x frame(s) change image
-        "initial_position" : (-50, -50),   # must be out of the scope
-        "initial_vector" : (0, 1),
-        "hp" : 0,
-        "max_hp" : 0, 
-        "invincible" : None,
-        "attack" : 0,
-        "defence" : 0,
-        "bonus" : 0,
-        "buff" : None,
-        "item" : None,
-    }
     @property
     @classmethod
     def settings(cls):
@@ -150,54 +254,54 @@ class Mobject(Sprite):
     @classmethod
     def settings(cls, *args, **kwargs):
         cls.__settings.update(kwargs)
-        if cls.__settings.get("hp"):
-            cls.hp = HP(cls.__settings["max_hp"])
-            if cls.__settings.get("max_hp"):
-                cls.hp.max = cls.__settings["max_hp"]
-            else:
-                cls.hp.max = cls.hp
-        if cls.__settings.get("attack"):
-            cls.atk = cls.__settings["attack"]
-        if cls.__settings.get("defence"):
-            cls.defence = cls.__settings["defence"]
-        if cls.__settings.get("invincible") is not None:
-            cls.invincible = cls.__settings["invincible"]
-        if cls.__settings.get("collidable") is not None:
-            cls.collidable = cls.__settings["collidable"]
-        if cls.__settings.get("crash_damage"):
-            cls.crash_damage = cls.__settings["crash_damage"]
-        if cls.__settings.get("collision_box_size"):
-            cls.rect = Rect(0,
-                            0,
-                            cls.__settings["collision_box_size"],
-                            cls.__settings["collision_box_size"])
-        cls.position = Vector2(cls.__settings["initial_position"])
-        cls.vector = Vector2(cls.__settings["initial_vector"])
-        
+        cls.position = kwargs["initial"]["initial_position"]
+        cls.vector = kwargs["initial"]["initial_vector"]
+        if kwargs["collide"]["collidable"]:
+            cls.rect = Rect(0,0,
+                            kwargs["collide"]["collision_box_size"],
+                            kwargs["collide"]["collision_box_size"]
+                            )
+        # cls.invincible = kwargs["info"]["invincible"]
+        # cls.hp = HP(kwargs["info"]["max_hp"])
+        # cls.hp = kwargs["info"]["hp"]
+        # cls.attack = kwargs["info"]["attack"]
+        # cls.defence = kwargs["info"]["defence"]
+        # cls.crash_damage = kwargs["info"]["crash_damage"]
+        if kwargs["rotate"]["rotatable"]:
+            cls.palstance = kwargs["rotate"]["palstance"]
+        cls.bonus = kwargs["extra"]["bonus"]
+        cls.buff = BuffGroup(kwargs["extra"]["buff"])
+        cls.item = ItemGroup(kwargs["extra"]["item"])
+
+    @property
+    @classmethod
+    def rect(cls):
+        return cls.__rect
+    @rect.setter
+    @classmethod
+    def rect(cls, *value):
+        l = len(value)
+        if l==1:
+            cls.__rect == Rect(0,0,value[0],value[0])
+        elif l==2:
+            cls.__rect == Rect(0,0,value[0],value[1])
+        else:
+            raise ValueError("please check the syntax of danmaku collide box\n")
 
     @classmethod
-    def load(cls, name, path=None, built=False):
-        if not built:
-            cls.picture_path = path
-            if cls.picture_path:
-                if not os.path.exists("__cache__"):
-                    os.mkdir("__cache__")
-                for f in sorted(os.listdir(os.path.abspath(path))):
-                    if f.find(name):
-                        i = load(f).convert_alpha()
-                        cls.image.append(i)
-        else:
-            pass
-        cls.image_position = cls.picture_rect.get_rect()
+    def load(cls, name, path=None, json=None, built=False):
+        pass
 
     @classmethod
     def build(cls):
         pass
 
+    def motion(self):
+        return Vector2(0,0)
+
     def move(self):
-        self.position += self.motion
+        self.position += self.motion()
         self.rect.centerx, self.rect.centery = self.vector.x, self.vector.y
-        self.collision_box.x, self.collision_box.y = self.vector.x, self.vector.y
         self.timer += 1
 
     def print(self, scope):
