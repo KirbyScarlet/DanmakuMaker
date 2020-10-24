@@ -1,11 +1,11 @@
 import pygame
 import enum
 
+__author__ = "KirbyScarlet"
+
 DEFAULT_WINDOW_SIZE = 640,480
 DEFAULT_SCOPE_SIZE = 400,440
 DEFAULT_SCOPE_POSITION = 30,20
-
-__author__ = "KirbyScarlet"
 
 @enum.unique
 class GameState(enum.Enum):
@@ -22,11 +22,11 @@ class DefaultKey(enum.Enum):
     down = pygame.K_DOWN
     left = pygame.K_LEFT
     right = pygame.K_RIGHT
-    shooting = pygame.K_Z
+    shooting = pygame.K_z
     smooth = pygame.K_LSHIFT
-    spell = pygame.K_X
-    special = pygame.K_C
-
+    spell = pygame.K_x
+    special = pygame.K_c
+    
 @enum.unique
 class MobjectType(enum.Enum):
     player = 0
@@ -42,3 +42,8 @@ class CheckType(enum.Enum):
     buff = 2
     debuff = 3
     
+class Scope():
+    left = 0
+    top = 0
+    right = 400  # default
+    bottom = 440  # default

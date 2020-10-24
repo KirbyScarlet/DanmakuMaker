@@ -1,6 +1,6 @@
 from . import Mobject
-from constants import MobjectType
-from constants import CheckType
+from ..constants import MobjectType
+from ..constants import CheckType
 
 class Boss(Mobject):
     """

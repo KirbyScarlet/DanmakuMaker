@@ -26,7 +26,7 @@ quiz1 = {
     },
     "attack_list":[
         {
-            "queue":1
+            "queue":1,
             "type":"normal",
             "duration":2700,
             "boundary":[50,50,350,150],
@@ -70,19 +70,19 @@ quiz1 = {
                                 "pi":{
                                     "type":"constant",
                                     "property":{
-                                        "value":math.pi
+                                        "value":"{math.pi}"
                                     }
                                 }
                             },
                             "action":[
-                                "init":{
+                                {
                                     "speed":2.33,
                                     "direction":{
                                         "base":{
                                             "type":"Mobject",
                                             "value":"player"
                                         },
-                                        "offset":"{index}*{pi}/60"
+                                        "offset":"{parament.index}*{parament.pi}/60"
                                     },
                                     "position":{
                                         "type":"relative",
@@ -108,5 +108,5 @@ quiz1 = {
 }
 
 game = dmk.Game()
-game.AddQuiz()
+#game.AddQuiz()
 game.run()

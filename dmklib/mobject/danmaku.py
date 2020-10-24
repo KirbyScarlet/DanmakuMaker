@@ -1,15 +1,15 @@
 from . import Mobject
 from . import MobjectGroup
-from constants import CheckType
+from ..constants import CheckType
 from math import inf
 
-from functions import Parament
-from constants import MobjectType
+from ..functions import Parament
+from ..constants import MobjectType
 
 __modules = {
     "line":[
         {
-            "type":""
+            "type":"",
             "time":[0,inf],
 
         }

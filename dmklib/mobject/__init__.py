@@ -1,7 +1,17 @@
 import os
 import sys
 import pickle
+import io
 
+import numpy
+
+from collections import deque
+from collections import namedtuple
+from itertools import count
+from itertools import cycle
+from math import pi
+
+import pygame.mixer
 from pygame.image import load
 from pygame.image import tostring
 from pygame.image import frombuffer
@@ -10,11 +20,7 @@ from pygame.sprite import Group
 from pygame.math import Vector2
 from pygame.rect import Rect
 
-from collections import deque
-from collections import namedtuple
-from itertools import count
-
-from constants import MobjectType
+from ..constants import MobjectType
 
 
 class HP(object):
@@ -99,8 +105,49 @@ class Damage(object):
         self.special()
 
 
-Image = namedtuple("Image", "illustration animation extra")
-Animation = namedtuple("Animation", "stand turn_left turn_right")
+#Image = namedtuple("Image", "illustration animation extra")
+#Animation = namedtuple("Animation", "stand turn_left turn_right")
+
+class Mapping(object):
+
+    """
+    """
+
+    def __init__(self):
+        self.__animation = []
+        self.__illustration = []
+
+    def load_image(self, image_json, built=False):
+        for pic in image_json.get("image"):
+            self.__animation.append(load(pic).convert_alpha())
+        for pic in image_json.get("illustration"):
+            self.__illustration.append(load(pic).convert_alpha())
+        self.__animate_cycle = cycle(self.__animation)  
+
+    def animate(self):
+        return next(self.__animate_cycle)
+
+
+class BackgroundMusic(object):
+
+    """
+    """
+
+    def __init__(self):
+        self.backgroudmusic = {}
+
+    def load_sound(self, _json, built=False):
+        self.backgroudmusic[_json["bgm"]["name"]] = io.BytesIO(_json["bgm"]["path"])
+
+    def set_bgm(self, name):
+        pygame.mixer.music.load(self.backgroudmusic.get("name"))
+
+    def play(self, loop):
+        pygame.mixer.music.play(loop)
+
+    def pause(self):
+        pygame.mixer.music.pause()
+
 
 class Source(object):
     """
@@ -125,6 +172,44 @@ class Source(object):
             self.illustration.append(load(im).convert_alpha())
 
 
+class Direction(object):
+    """
+    """
+    def __init__(self, mob):
+        self.vector = mob.vector
+
+    @property
+    def radian(self):
+        return self.vector.as_polar()[1]
+
+    @radian.setter
+    def radian(self, value):
+        self.vector.from_polar((self.vector.length(), value))
+
+    @property
+    def degree(self):
+        return self.vector.as_polar()[1]*180/pi
+
+    @degree.setter
+    def degree(self, value):
+        self.vector.from_polar((self.vector.length(), value*pi/180))
+
+    @property
+    def coordinate(self):
+        return [self.vector.x, self.vector.y]
+
+    @coordinate.setter
+    def coordinate(self, value):
+        self.vector.x, self.vector.y = value
+
+    def __get__(self, instance, owner):
+        return self.radian
+
+    def __set__(self, instance, value):
+        self.radian = value
+        return
+
+
 class MobjectGroup(Group):
     """
     class MobjectGroup(pygame.sprite.Group):
@@ -137,7 +222,7 @@ class MobjectGroup(Group):
     layer = 0
 
 
-class Mobject(Sprite):
+class Mobject_old(Sprite):
 
     """
 
@@ -191,6 +276,16 @@ class Mobject(Sprite):
     collidable = True      # collidable
     position = Vector2()   # mobject position
     vector = Vector2()     # movements speed and direction
+    
+    @property
+    @classmethod
+    def speed(cls):
+        return cls.vector.length()
+    
+    @speed.setter
+    @classmethod
+    def speed(cls, value):
+        cls.vector.scale_to_length(value)
 
     '''
     __sources = {
@@ -296,8 +391,16 @@ class Mobject(Sprite):
     def build(cls):
         pass
 
+    def __new__(cls, *args, **kwargs):
+        cls.direction = Direction(cls)
+        return super().__new__(*args, **kwargs)
+
     def motion(self):
         return Vector2(0,0)
+
+    def collision_map_update(self, c_map):
+        for i in range(c_map):
+            pass
 
     def move(self):
         self.position += self.motion()
@@ -307,3 +410,43 @@ class Mobject(Sprite):
     def print(self, scope):
         scope.blit(self.image, self.rect)
         
+
+class Mobject(Sprite):
+    
+    """
+    """
+    
+    __type = None
+
+    def __init__(self, _json={}):
+        pass
+
+    @classmethod
+    def load_image(cls, _json, built=False):
+        cls.image = Mapping()
+        cls.image.load_image(_json["picture"])
+
+    @classmethod
+    def load_sound(cls, _json, built=False):
+        cls.sound
+
+    @staticmethod
+    def build_source(_json={}):
+        images = {"image":[], "illustration":[]}
+        sounds = {"bgm":[], "effects":[]}
+        for img in _json["image"]:
+            temp_img = load(img).convert_alpha()
+            temp_rect = temp_img.get_rect()
+            images["image"].append((tostring(temp_img, "RGBA"), temp_rect.size))
+        for illu in _json["illustration"]:
+            temp_illu = load(illu).convert_alpha()
+            temp_rect = temp_illu.get_rect()
+            images["illustration"].append((tostring(temp_illu, "RGBA"), temp_rect.size))
+        for bgm in _json["bgm"]:
+            with open(bgm["path"], 'rb') as temp_bgm:
+                sounds["bgm"].append((bgm.get("name"), temp_bgm.read()))
+        for efx in _json["sound_effects"]:
+            with open(bgm["path"], 'rb') as temp_efx:
+                sounds["effects"].append((efx.get("name"), temp_bgm.read()))
+        
+

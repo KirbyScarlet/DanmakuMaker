@@ -1,6 +1,6 @@
 import pygame
 import traceback
-from dmklib.constants import *
+import dmklib.constants
 
 class Game(object):
     """
@@ -10,8 +10,8 @@ class Game(object):
     >>> game.run()
     """
 
-    __window_size = DEFAULT_WINDOW_SIZE
-    __scope_size = DEFAULT_SCOPE_SIZE
+    __window_size = dmklib.constants.DEFAULT_WINDOW_SIZE
+    __scope_size = dmklib.constants.DEFAULT_SCOPE_SIZE
     __scope_position = 0, 0
     __window_caption = "danmaku maker"
     __state_code = None
@@ -65,9 +65,11 @@ class Game(object):
         pygame.init()
 
         try:
-            pygame.display.set_mode(self.__window_size)
+            window = pygame.display.set_mode(self.__window_size)
             pygame.display.set_caption(self.__window_caption)
             scope = pygame.surface.Surface(self.__scope_size)
+            window.fill((255,255,255))
+            pygame.display.update()
 
             while self.running:
                 for event in pygame.event.get():

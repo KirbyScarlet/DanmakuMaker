@@ -32,6 +32,12 @@ class Action():
             self.direct.scale_to_length
         return _temp_linear_speed
 
+    @staticmethod
+    def init(_json={}):
+        def action_init(self, _json):
+            self.vector.scale_to_length(_json["speed"])
+
+
     def __call__(self, timer, speed):
         pass
 

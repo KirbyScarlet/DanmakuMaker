@@ -1,0 +1,52 @@
+---
+danmaku:
+- comment: "example"
+  name: "test1"
+  size: 3  # collision box
+  image:
+  - "test/img/orange_glow_dot.png"
+  damage: 30  # crash damage
+  area:  # [x0, y0, x1, y1]
+  - "{{ Scope.left - 20 }}"
+  - "{{ Scope.top - 20 }}"
+  - "{{ Scope.right + 470 }}"
+  - "{{ Scope.bottom + 500 }}"
+  life: -1
+  layer: 0  # small objects on the top
+  motion:
+  - time:
+      start: 0
+      end: 60  # frame
+    direction:
+      base: "{{ math.pi / 2 }}"
+      offset: 0
+    speed: "{{ Action.liner(0,2) }}"
+  - time:
+      start: 60
+      end: -1
+    direction: false
+    speed: false
+boss:
+- comment: "test boss"
+  name: "cocoa"
+  size: 31
+  crash: 18
+  area:
+  - "{{ Scope.left + 20 }}"
+  - "{{ Scope.top + 20 }}"
+  - "{{ Scope.right - 20 }}"
+  - "{{ Scope.top + 220 }}"
+  script:
+  - attacktype: "{{ Attack.normal }}"
+    rules:
+    - loop: -1
+      debut: 0
+      max_hp: 4800
+      queue:
+      - elaspe: 90
+        emitter:
+          shooting_time: 1
+          danmaku: "test1"
+          count: 60
+
+        
