@@ -1,4 +1,36 @@
 ---
+menu:
+  tree:
+  - name: "start"
+    widget:
+      type: "font"
+      options:
+        font: "DeJavu Sans"
+        size: 17
+        color: "#00EE00"
+        border_width: 2
+        border_color: "#444444"
+        text: "start"
+    submenu:
+    - name: "easy"
+      widget:
+        type: "font"
+        options:
+          size: 16
+          color: "#88EEFF"
+          text: "easy"
+  - name: "extra"
+    widget: 
+      type: "font"
+      options:
+        size: 17
+        color: "#22EE22"
+        border_width: 2
+        border_color: "#444444"
+        text: "extra start"
+  option_template:
+  - depth: 1
+    
 danmaku:
 - comment: "example"
   name: "test1"
@@ -45,8 +77,8 @@ boss:
       queue:
       - elaspe: 90
         emitter:
+          position: "{{ self }}"
           shooting_time: 1
           danmaku: "test1"
           count: 60
 
-        

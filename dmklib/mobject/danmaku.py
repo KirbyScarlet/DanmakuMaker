@@ -31,6 +31,7 @@ def emitter(continuity="disposable"):
         group = MobjectGroup()
         for _ in _json["amount"]:
             group.add(Danmaku())  #¿?
+    return disposable
 
 class Emitter(object):
     """

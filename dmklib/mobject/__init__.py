@@ -37,10 +37,7 @@ class HP(object):
     >>> mobject.hp.max = 200
     >>> mobject.hp.full()  # 200
     """
-
-    __hp = 0
-    __max_hp = 0
-
+    
     def __init__(self, hp=128):
         self.__hp = hp
         self.__max_hp = hp
@@ -51,6 +48,8 @@ class HP(object):
     @max.setter
     def max(self, value):
         self.__max_hp = value
+        if self.__hp <= self.__max_hp:
+            self.__hp = value
 
     def full(self):
         self.__hp = self.__max_hp
@@ -105,8 +104,47 @@ class Damage(object):
         self.special()
 
 
+class Direction(object):
+    """
+    """
+    def __init__(self, mob):
+        self.vector = mob.vector
+
+    @property
+    def radian(self):
+        return self.vector.as_polar()[1]
+
+    @radian.setter
+    def radian(self, value):
+        self.vector.from_polar((self.vector.length(), value))
+
+    @property
+    def degree(self):
+        return self.vector.as_polar()[1]*180/pi
+
+    @degree.setter
+    def degree(self, value):
+        self.vector.from_polar((self.vector.length(), value*pi/180))
+
+    @property
+    def coordinate(self):
+        return [self.vector.x, self.vector.y]
+
+    @coordinate.setter
+    def coordinate(self, value):
+        self.vector.x, self.vector.y = value
+
+    def __get__(self, instance, owner):
+        return self.radian
+
+    def __set__(self, instance, value):
+        self.radian = value
+        return
+
+
 #Image = namedtuple("Image", "illustration animation extra")
 #Animation = namedtuple("Animation", "stand turn_left turn_right")
+
 
 class Mapping(object):
 
@@ -172,44 +210,6 @@ class Source(object):
             self.illustration.append(load(im).convert_alpha())
 
 
-class Direction(object):
-    """
-    """
-    def __init__(self, mob):
-        self.vector = mob.vector
-
-    @property
-    def radian(self):
-        return self.vector.as_polar()[1]
-
-    @radian.setter
-    def radian(self, value):
-        self.vector.from_polar((self.vector.length(), value))
-
-    @property
-    def degree(self):
-        return self.vector.as_polar()[1]*180/pi
-
-    @degree.setter
-    def degree(self, value):
-        self.vector.from_polar((self.vector.length(), value*pi/180))
-
-    @property
-    def coordinate(self):
-        return [self.vector.x, self.vector.y]
-
-    @coordinate.setter
-    def coordinate(self, value):
-        self.vector.x, self.vector.y = value
-
-    def __get__(self, instance, owner):
-        return self.radian
-
-    def __set__(self, instance, value):
-        self.radian = value
-        return
-
-
 class MobjectGroup(Group):
     """
     class MobjectGroup(pygame.sprite.Group):
@@ -219,7 +219,8 @@ class MobjectGroup(Group):
     layer -> int:
         group 0 will on the top layer.
     """
-    layer = 0
+    def __init__(self, layer):
+        self.layer = layer
 
 
 class Mobject_old(Sprite):
@@ -418,9 +419,6 @@ class Mobject(Sprite):
     
     __type = None
 
-    def __init__(self, _json={}):
-        pass
-
     @classmethod
     def load_image(cls, _json, built=False):
         cls.image = Mapping()
@@ -428,7 +426,8 @@ class Mobject(Sprite):
 
     @classmethod
     def load_sound(cls, _json, built=False):
-        cls.sound
+        cls.sound = BackgroundMusic()
+        cls.sound.load_sound(_json["sound"])
 
     @staticmethod
     def build_source(_json={}):
@@ -448,5 +447,8 @@ class Mobject(Sprite):
         for efx in _json["sound_effects"]:
             with open(bgm["path"], 'rb') as temp_efx:
                 sounds["effects"].append((efx.get("name"), temp_bgm.read()))
-        
+
+    def __init__(self, _json={}):
+        self.hp = HP(_json.get("max_hp"))
+        self.position = Vector2(_json.get("position"))
 

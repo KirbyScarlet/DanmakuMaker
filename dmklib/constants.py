@@ -41,6 +41,11 @@ class CheckType(enum.Enum):
     damage = 1
     buff = 2
     debuff = 3
+
+@enum.unique
+class TextType(enum.Enum):
+    text = 0
+    image = 1
     
 class Scope():
     left = 0
